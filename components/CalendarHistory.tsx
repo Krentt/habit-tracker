@@ -1,17 +1,45 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { ActivityType, DailyLog } from '@/lib/types';
 import { formatDate, getMonthYear } from '@/lib/utils';
 import ActivityIcon from './ActivityIcon';
+import { supabase } from '@/lib/supabase';
 
 interface CalendarHistoryProps {
-  logs: DailyLog[];
   userId: string;
 }
 
-export default function CalendarHistory({ logs, userId }: CalendarHistoryProps) {
+export default function CalendarHistory({ userId }: CalendarHistoryProps) {
   const [currentDate, setCurrentDate] = useState(new Date());
+  const [logs, setLogs] = useState<DailyLog[]>([]);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    const fetchMonthLogs = async () => {
+      if (!userId) return;
+      setLoading(true);
+
+      const year = currentDate.getFullYear();
+      const month = currentDate.getMonth();
+      const startDate = formatDate(new Date(year, month, 1));
+      const endDate = formatDate(new Date(year, month + 1, 0));
+
+      const { data, error } = await supabase
+        .from('mst_daily_logs')
+        .select('*')
+        .eq('user_id', userId)
+        .gte('date', startDate)
+        .lte('date', endDate);
+
+      if (!error && data) {
+        setLogs(data);
+      }
+      setLoading(false);
+    };
+
+    fetchMonthLogs();
+  }, [currentDate, userId]);
 
   const getDaysInMonth = (date: Date) => {
     return new Date(date.getFullYear(), date.getMonth() + 1, 0).getDate();
@@ -23,9 +51,7 @@ export default function CalendarHistory({ logs, userId }: CalendarHistoryProps) 
 
   const getActivityForDate = (date: Date): ActivityType | null => {
     const dateStr = formatDate(date);
-    const log = logs.find(
-      (log) => log.user_id === userId && log.date === dateStr
-    );
+    const log = logs.find((log) => log.date === dateStr);
 
     if (!log || !log.activity || log.activity.length === 0) {
       return null;
@@ -57,6 +83,14 @@ export default function CalendarHistory({ logs, userId }: CalendarHistoryProps) 
   }
 
   const dayNames = ['Min', 'Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab'];
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-8">
+        <div className="text-zinc-400 text-sm">Memuat data...</div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-4">

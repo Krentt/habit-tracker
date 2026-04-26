@@ -205,7 +205,7 @@ export default function Dashboard() {
         {showHistory && (
           <div className="bg-gradient-to-br from-zinc-900/90 to-zinc-950/90 backdrop-blur-sm rounded-2xl p-6 border border-zinc-800">
             <h2 className="text-xl font-bold text-white mb-4">Riwayat</h2>
-            <CalendarHistory logs={logs} userId={user?.id || ''} />
+            <CalendarHistory userId={user?.id || ''} />
           </div>
         )}
       </div>
