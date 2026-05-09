@@ -48,15 +48,34 @@ export default function AIChatWidget() {
         }),
       });
 
-      const data = await res.json();
-      if (data.message) {
-        setMessages(prev => [...prev, { role: 'assistant', content: data.message }]);
-      } else {
+      if (!res.ok || !res.body) {
         setMessages(prev => [...prev, { role: 'assistant', content: 'Terjadi kesalahan, coba lagi.' }]);
+        setLoading(false);
+        return;
+      }
+
+      // Add empty assistant message, fill incrementally
+      setMessages(prev => [...prev, { role: 'assistant', content: '' }]);
+      setLoading(false);
+
+      const reader = res.body.getReader();
+      const decoder = new TextDecoder();
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        const chunk = decoder.decode(value, { stream: true });
+        setMessages(prev => {
+          const updated = [...prev];
+          updated[updated.length - 1] = {
+            role: 'assistant',
+            content: updated[updated.length - 1].content + chunk,
+          };
+          return updated;
+        });
       }
     } catch {
       setMessages(prev => [...prev, { role: 'assistant', content: 'Terjadi kesalahan, coba lagi.' }]);
-    } finally {
       setLoading(false);
     }
   };
