@@ -9,6 +9,7 @@ import ActivityButton from './ActivityButton';
 import StreakComparison from './StreakComparison';
 import CalendarHistory from './CalendarHistory';
 import UserAvatar from './UserAvatar';
+import AIChatWidget from './AIChatWidget';
 
 export default function Dashboard() {
   const { user, logout } = useAuth();
@@ -209,6 +210,8 @@ export default function Dashboard() {
           </div>
         )}
       </div>
+
+      <AIChatWidget />
     </div>
   );
 }
